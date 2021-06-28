@@ -16,17 +16,27 @@ Route::get('/', function () {
 });
 
 Route::group(['prefix' => 'admin'], function() {
-    Route::get('news/create', 'Admin\NewsController@add')->middleware('auth');
-
+    
+    Route::get('news/create', 'Admin\NewsController@add')->middleware('auth'); // ->middleware('auth')は非ログイン時のログイン画面転送用
+     // http://XXXXXX.jp/admin/news/create にアクセスが来たら、Controller Admin\NewsController のAction addに渡す という設定
+      // mddlewareauthは、ログインしてない人には見せられないようにするためのコード
     Route::get('profile/create', 'Admin\ProfileController@add');
     
     Route::get('profile/edit', 'Admin\ProfileController@edit');
     
-    Route::post('news/create', 'Admin\NewsController@create');
+    Route::post('news/create', 'Admin\NewsController@create')->middleware('auth');
     
     Route::post('profile/create', 'Admin\ProfileController@create');
     
     Route::post('profile/edit', 'Admin\ProfileController@update');
+    
+    Route::get('news', 'Admin\NewsController@index')->middleware('auth');
+    // PHP/Laravel16 更新・削除を実装しよう　で追記
+    Route::get('news/edit', 'Admin\NewsController@edit')->middleware('auth'); 
+    
+    Route::post('news/edit', 'Admin\NewsController@update')->middleware('auth');
+    // 追記
+    Route::get('news/delete', 'Admin\NewsController@delete')->middleware('auth');
 });
 Auth::routes();
 
