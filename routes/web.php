@@ -11,9 +11,6 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
 
 Route::group(['prefix' => 'admin'], function() {
     
@@ -38,6 +35,10 @@ Route::group(['prefix' => 'admin'], function() {
     // 追記
     Route::get('news/delete', 'Admin\NewsController@delete')->middleware('auth');
 });
+
+    // PHP/Laravel 19 フロント で以下を追記 
+Route::get('/', 'NewsController@index');
+
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');

@@ -17,9 +17,9 @@ class News extends Model
      // 以下を追記 PHP/Laravel17
      
     // News Modelに関連付けを行う
-    public function histories()
+    public function histories() // このhistories関数の意味は…
     {
-      return $this->hasMany('App\History');
+      return $this->hasMany('App\History'); // newsテーブルが更新されるたびにhistoriesテーブルを作成する関数
 
     }
     //
