@@ -23,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        // HTTPをHTTPS に 通信プロトコルを変更するために以下を追記
+        if (\App::environment('production')) {
+            \URL::forceScheme('https');
+    }
     }
 }
