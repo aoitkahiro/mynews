@@ -11,6 +11,8 @@ use App\News; // ???
 use App\History;
 // PHP/Laravel17 で日付取得を追加したため、以下も追記
 use Carbon\Carbon;
+ // PHP/Laravel Heroku画像upの際に以下も追記
+use Storage;
 
 class NewsController extends Controller
 {
@@ -32,10 +34,12 @@ class NewsController extends Controller
        //$formという入力データのかたまりを定義した。 Requestクラスとは…Laravelが最初から用意しているクラス
        // ↓のif文の解説：フォームから画像が送信されてきたら、保存して、$news->image_path に画像のパスを保存する
       if (isset($form['image'])) {
-        $path = $request->file('image')->store('public/image');//Laravelのメソッド　storageのappまで自動的に見に行く
+        $path = Storage::disk('s3')->putFile('/',$form['image'],'public'); // Heroku用
+         // ↑に変更済 $path = $request->file('image')->store('public/image');//Laravelのメソッド　storageのappまで自動的に見に行く
         //メソッドチェーン　fileメソッドがなんらかのインスタンスを返す　returnで値じゃなくてインスタンスを返す
         //storeメソッドは保存して返り値で画像のパスの文字列を返す（xx/xx/xxx.jpg）
-        $news->image_path = basename($path); // (↑のxxx.jpg　だけを返すのがbasename)
+        $news->image_path = Storage::disk('s3')->url($path); // Heroku用
+         // ↑に変更済 $news->image_path = basename($path); // (↑のxxx.jpg　だけを返すのがbasename)
       } else {
           $news->image_path = null;
       }
@@ -98,8 +102,10 @@ class NewsController extends Controller
             if ($request->remove == 'true') { // もし$request->removeが'true' なら$news_form['image_path'] = null;を実行
           $news_form['image_path'] = null;
       } elseif ($request->file('image')) { 
-          $path = $request->file('image')->store('public/image');
-          $news_form['image_path'] = basename($path);
+          $path = Storage::disk('s3')->putFile('/',$form['image'],'public');
+          //$path = $request->file('image')->store('public/image');
+          $news->image_path = Storage::disk('s3')->url($path);
+          //$news_form['image_path'] = basename($path);
       } else {
           $news_form['image_path'] = $news->image_path;
       }
