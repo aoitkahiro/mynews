@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class News extends Model
 {
-    protected $guarded = array('id');
+    protected $guarded = array('id'); // id というデータは外から変更できないようにしてくださいという意味（ほかのデータは変更できるという意味になる）
 
     // 以下を追記
     public static $rules = array(

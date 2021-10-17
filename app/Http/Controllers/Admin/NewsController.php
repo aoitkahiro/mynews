@@ -23,14 +23,16 @@ class NewsController extends Controller
  }
      // 以下を追記
   public function create(Request $request) // Requestクラスが何かというと、上の5行目 Illuminate\Http\Request; つまりLaravelの説明書参照
-  {                     // $requestが すべてのフォームを受け取る（代入されている）Requestクラスのインスタンスなので何も設定しなくても、そういうことになる。
+  {                     // $requestを引数に指定するとLaravelが すべてのフォームを受け取る（知らないブラウザ情報なども）（代入されている）Requestクラスのインスタンスなので何も設定しなくても、そういうことになる。
       
       // 以下を追記
       // Varidationを行う
+      // dd($request->hogehoge);
       $this->validate($request, News::$rules);
     //   newは 「こういうインスタンス（＝テーブルではない）を作成する」というメソッド。それを$newsに代入する
       $news = new News;
-      $form = $request->all(); //$request の正体は上の(Request $request) つまり、Requestクラスのインスタンスとなっている
+      $form = $request->all(); //$request の正体は上の(Request $request) つまり、Requestクラスのインスタンスとなっている。一括で連想配列で取得
+      $hoge='hello';
        //$formという入力データのかたまりを定義した。 Requestクラスとは…Laravelが最初から用意しているクラス
        // ↓のif文の解説：フォームから画像が送信されてきたら、保存して、$news->image_path に画像のパスを保存する
       if (isset($form['image'])) {
@@ -96,21 +98,27 @@ class NewsController extends Controller
       // Validationをかける
       $this->validate($request, News::$rules);
       // News Modelからニュースデータを取得する（ここ以下何をしているのか、わからない！）
-      $news = News::find($request->id);
-      // 送信されてきたフォームデータを格納する e.g.) ユーザーの入力全部:$request->all()
+      $news = News::find($request->id);//bladeファイルのinputタグの中にある、name属性がidである値を参照している。idを引数として、Newsモデルの該当レコードを$newsに代入している。
+                    //findはSQL文でいう「whereで該当物を探す機能＋select文で取得する機能」だと考えて良い。この場合idだけをselectしている。
+      // 送信されてきた色んな情報の中の「フォームデータのみ」を格納する。dd()で見るとtitleやbody、idがあることが確認できる e.g.) ユーザーの入力全部:$request->all()
       $news_form = $request->all();
-            if ($request->remove == 'true') { // もし$request->removeが'true' なら$news_form['image_path'] = null;を実行
-          $news_form['image_path'] = null;
-      } elseif ($request->file('image')) { 
+             // removeはedit.bladeの中にネーミングされているものを指している。$request-> ときたら”form"の中で書かれた情報かなと気づきたい
+       if ($request->remove == 'true') { // もし$request->removeが'true' なら$news_form['image_path'] = null;を実行
+             // チェックボックスからtrueかnullが送られてくるよう、bladeファイルに書かれている。
+          $news_form['image_path'] = null; // 画像削除がtrueなのでイメージパスをnullにする
+       } elseif ($request->file('image')) { // fileメソッド（最初からlaravelにある機能）でimageの情報が”あった場合”
           $path = Storage::disk('s3')->putFile('/',$news_form['image'],'public');
-          //$path = $request->file('image')->store('public/image');
+          //$path = $request->file('image')->store('public/image');　 // pulic/imageフォルダにstoreする。保存に成功すると保存した場所を返り値として呼び出し側に保存する。返り値である「場所」を$pathに代入する
           $news->image_path = Storage::disk('s3')->url($path);
-          //$news_form['image_path'] = basename($path);
-      } else {
-          $news_form['image_path'] = $news->image_path;
-      }
-
-      unset($news_form['image']);
+          //$news_form['image_path'] = basename($path); // env/xxx/xxx/xxx/xx/filename.jpg みたいな情報を画像のファイルネームだけを取ってくる
+       } else {//最初から記事に登録されている画像を使う場合
+          $news_form['image_path'] = $news->image_path; //  $news_form['image_path'] （これを最後登録したい）に$news->image_path;（$news = News::find($request->id);の時点ですでにある画像を入れる
+       }//mynewsのやり方は、tableに名前を保存している。DBにカラムを持っておくのは無駄だと考える。自分でつけた法則の名前を画像名につけておけば
+        // その法則に則って画像の表示ができると考える。画像名はusertableのIDを使う。例えば、user_id番号.jpg などを名付ける。
+        // こうすることでblade側で掌握しているid番号がある。そのid番号を使って、userid番号_user名.jpg 等を指定してあげれば画像表示ができる。
+        // 最終的に画像の種類ごとに例えばusersディレクトリやcourseディレクトリなどを作り保存する。
+        //title　body image_path 以外は連想配列にないので消す。image remove _token とかは消さないとsaveするときにエラーになってしまう
+      unset($news_form['image']); // image＝ダイアログで選んだファイルの情報、$request->fileと同じ image_path＝画像の場所 つまり画像ではなく画像のありかを保存する。画像は消す
       unset($news_form['remove']);
       unset($news_form['_token']);
 

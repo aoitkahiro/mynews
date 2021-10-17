@@ -19,6 +19,10 @@ Route::group(['prefix' => 'admin'], function() {
       // mddlewareauthは、ログインしてない人には見せられないようにするためのコード
     Route::get('profile/create', 'Admin\ProfileController@add');
     
+    Route::get('profile/index', 'Admin\ProfileController@index');
+    
+    Route::get('profile/delete', 'Admin\ProfileController@delete');//post?
+    
     Route::get('profile/edit', 'Admin\ProfileController@edit');
     
     Route::post('news/create', 'Admin\NewsController@create')->middleware('auth');
